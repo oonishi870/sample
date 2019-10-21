@@ -1,4 +1,8 @@
+%title test
+%date 2019/10/21
+
 # sample
+%test test
 practice for github
 
 - test
@@ -12,6 +16,7 @@ practice for github
 import test
 ```
 
+<!--- test comment -->
 
 
 ```python :filename
