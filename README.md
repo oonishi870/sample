@@ -20,25 +20,26 @@ import test
 
 
 1. test
-  あいうえうお  
-  <!--- test comment -->  
-  テスト
+1. test  
+    あいうえうお  
+    <!--- test comment -->  
+    テスト
 
 
-  あいうえうお2
-  <!--- test comment -->  
-  テスト
+    あいうえうお2
+    <!--- test comment -->  
+    テスト
 
 
-  あいうえうお3  
-  <!--- test comment -->
-  テスト
+    あいうえうお3  
+    <!--- test comment -->
+    テスト
 
 
 
-  あいうえうお4
-  <!--- test comment -->
-  テスト
+    あいうえうお4
+    <!--- test comment -->
+    テスト
 1. test
 
 ```python :filename
