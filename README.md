@@ -19,6 +19,10 @@ import test
 <!--- test comment -->
 
 
+あいうえうお  
+<!--- test comment -->  
+テスト
+
 ```python :filename
 import test
 ```
