@@ -3,7 +3,14 @@
 
 # sample
 <!--- test comment -->  
-
+<script>
+ window.Lazyload.js('{{ _sources.mermaid }}', function() {
+   mermaid.initialize({
+     startOnLoad: true
+   });
+   mermaid.init(undefined, '.language-mermaid');
+ });
+</script>
 ~~~mermaid
 sequenceDiagram
     participant Alice
