@@ -4,6 +4,14 @@
 # sample
 <!--- test comment -->  
 
+~~~mermaid
+sequenceDiagram
+    participant Alice
+    participant Bob
+    Alice->>John: Hello John, how are you?
+~~~
+
+
 practice for github
 
 
