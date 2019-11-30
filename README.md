@@ -1,6 +1,12 @@
 %title test
 %date 2019/10/21
 
+test
+==============
+
+test2
+----------
+
 # sample
 <!--- test comment -->  
 
