@@ -1,142 +1,83 @@
-%title test
-%date 2019/10/21
+# システム自動化
 
-test
-==============
+## 検証
 
-test2
-----------
+### 各種サーバ連携
 
-blocktest start
-```python
-```
-blocktset end
+#### トリガー監視デーモン
 
+- 実行するツールは同期処理とする。
+- 実行するツールは戻り値を返却する。
+  - エラーが発生した場合はどのタイミングで発生したかわかるよう戻り値を定義する。
+    - エラーの場合の自動化DB登録はツール、またはトリガー側で行うかは未定。
+- 実行ツールが使用するパラメータは環境変数に設定しておく。
 
-blocktest start
-```python
-test    
-```
-blocktset end
-
-# sample
-<!--- test comment -->  
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.0.0/mermaid.min.js"></script>
-
-
-~~~mermaid
-sequenceDiagram
-    participant Alice
-    participant Bob
-    Alice->>John: Hello John, how are you?
-~~~
-
-
-practice for github
-
-
+#### シーケンス
 
 ```mermaid
 sequenceDiagram
-    participant Alice
-    participant Bob
-    Alice->>John: Hello John, how are you?
-    loop Healthcheck
-        John->>John: Fight against hypochondria
+  participant A as 管理サーバ
+  participant B as 疑似CPP
+  participant C as 疑似Java
+  participant D as ZDC-S3
+  Note over A,D: 新規(木崎)トリガー監視デーモンが実行するツール
+  A->>B: サーバ起動(awscli)
+  B->>A: 起動結果返却
+  A->>C: サーバ起動(awscli)
+  C->>A: 起動結果返却
+  A->>B: コンテナ状態確認(ssh)
+  B->>A: コンテナ状態返却
+  alt コンテナ未起動 
+    A->>B: コンテナ起動(ssh)
+    B->>A: 起動結果返却
+  end
+  rect rgb(178, 101, 255)
+    Note over A,C: 既存
+    A->>+B: 対象バージョン取得(ssh)
+    B->>-A: 対象バージョン返却
+    A->>+B: 運用ツール実行(ssh)
+    B-->>C: データ配置
+    B->>-A: 実行結果返却
+  end
+  A->>C: 抽出用パラメータ設置(scp)
+  rect rgb(255, 255, 153)
+    Note over A,C: 新規(中畑さん？)
+    A->>+C: 抽出ツール実行(ssh)
+    C->>-A: 実行結果返却
+  end
+  rect rgb(255, 153, 153)
+    Note over A,D: 新規(木崎)
+    A->>+C: 抽出結果アップロードツール実行(ssh)
+    C-->>D: データアップロード
+    C->>-A: 実行結果返却
+  end
+  A->>C: サーバ状態確認(awscli)
+  C->>A: サーバ状態返却
+  alt サーバ起動中
+    A->>C: 処理/ログイン確認(ssh)
+    C->>A: 結果返却
+    alt 処理/ログインなし
+      A->>C: サーバ停止(awscli)
+      C->>A: 停止結果返却
     end
-    Note right of John: Rational thoughts<br/>prevail...
-    John-->>Alice: Great!
-    John->>Bob: How about you?
-    Bob-->>John: Jolly good!
-```
-
-- test
-  ```python
-  import test
-  ```
+  end
   
-  
-
-```python
-import test
-```
-
-<!--- test comment -->
-
-
-1. test
-1. test  
-    あいうえうお  
-    <!--- test comment -->  
-    テスト
-
-
-    あいうえうお2
-    <!--- test comment -->  
-    テスト
-
-
-    あいうえうお3  
-    <!--- test comment -->
-    テスト
-
-
-
-    あいうえうお4
-    <!--- test comment -->
-    テスト
-1. test
-
-```python :filename
-import test
-```
-
-
-```python "10"
-import test
-```
-
-<!-- attach: test -->
-
-| test | test2 |test |
-|---|---|---|
-|0|1|2|
-
-test  
-
-```python
-test
-```  
-
-test
-
-aiueo
-
-
-
-
-```mermaid
-gantt
-    title A Gantt Diagram
-    dateFormat  YYYY-MM-DD
-    section Section
-    A task           :a1, 2014-01-01, 30d
-    Another task     :after a1  , 20d
-    section Another
-    Task in sec      :2014-01-12  , 12d
-    another task      : 24d
-```
-
-
-```
-test
-<!--
-```
--->
-
-<!--
-```
--->
-test
+  A->>B: コンテナ状態確認(ssh)
+  B->>A: コンテナ状態返却
+  alt 対象コンテナ起動中
+    A->>B: 処理/ログイン確認(ssh)
+    B->>A: 結果返却
+    alt 処理/ログインなし
+      A->>B: 対象コンテナ停止(ssh)
+      B->>A: 停止結果返却
+    end
+  end
+  alt その他コンテナ起動なし
+    A->>B: ホスト側処理/ログイン確認
+    B->>A: 結果返却
+    alt 処理/ログインなし
+      A->>B: サーバ停止(awscli)
+      B->>A: 停止結果返却
+    end
+  end
 ```
