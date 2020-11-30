@@ -1,0 +1,118 @@
+#!/usr/bin/env python
+
+import imp
+import re
+import bisect
+from pprint import *
+import os.path
+import sys
+md = imp.load_source('mdcoderun', os.path.join(os.path.dirname(sys.argv[0]), 'mdcoderun'))
+
+def read_subtrees(body, mdname):
+    codeblocks = md.read_codeblocks(body, mdname)
+    line_starts = [m.start() for m in re.finditer('^', body, re.MULTILINE)]
+    #pprint(line_starts)
+    #raise
+
+    FENCED_BLOCK_RE = re.compile(r'''^(?P<level>#+) (?P<title>.+?)\n'''
+        r'''|<!--.*?-->''', re.MULTILINE | re.DOTALL)
+
+
+    stack = [{'start':0,'level':0}]
+
+
+    start = 0
+    Subtrees = []
+    #for b in codeblocks:
+    for end,next in ([(b['start'], b['end']) for b in codeblocks] + [(None, None)]):
+        #print(start, b['start'])
+        #print(body[start:b['start']])
+        #for m in FENCED_BLOCK_RE.finditer(body[start:b['start']]):
+        for m in FENCED_BLOCK_RE.finditer(body[start:end]):
+            #pprint((m.group('level'), m.group('title')))
+            if not m.group('level'): continue
+            level = len(m.group('level'))
+            while stack[-1]['level'] >= level:
+                stack[-1]['end'] = m.start() + start
+
+                stack[-1]['start_lno'] = bisect.bisect_left(line_starts,  stack[-1]['start']) + 1
+                stack[-1]['end_lno']   = bisect.bisect_right(line_starts, stack[-1]['end'])
+
+                Subtrees += [stack.pop()]
+            stack += [{
+                'start': m.start() + start,
+                'level': level,
+                'title': m.group('title') or ''
+            }]
+
+        #start = b['end']
+        start = next
+    while stack:
+        #stack[-1]['end'] = len(body) + start
+        stack[-1]['end'] = len(body)
+        stack[-1]['start_lno'] = bisect.bisect_left(line_starts,  stack[-1]['start']) + 1
+        stack[-1]['end_lno']   = bisect.bisect_right(line_starts, stack[-1]['end'])
+        Subtrees += [stack.pop()]
+
+    parent = None
+    for i, subtree in reversed(list(enumerate(Subtrees))):
+        while parent and parent['level'] >= subtree['level']:
+            parent = parent['parent']
+        subtree['parent'] = parent
+        parent = subtree
+    return Subtrees
+
+def getSubtreeByIndex(Subtrees, level, index):
+    index_org = index
+    for i, subtree in enumerate(Subtrees):
+        if subtree['level'] <= level:
+            index -= 1
+        if index == 0:
+            return subtree
+    raise Exception(f'index={index_org} is out of range.')
+
+def getSubtreeByLineNum(Subtrees, level, linenum):
+    lnos = [s['end_lno'] for s in Subtrees]
+    index = bisect.bisect_left(lnos, linenum)
+    st = Subtrees[index]
+    while level < st['level']:
+        st = st['parent']
+    return st
+
+# x = read_subtrees(open('/home/owner/Dropbox/lifebook-neon/docker/source/containers/common/bin/tests/md/nsadsvr_create_matching_source.md').read(), '')
+# pprint(x)
+# raise
+import sys
+
+def main():
+    import argparse
+    import tempfile
+
+    # resolve:-h オプションを上書き可能にする
+    parser = argparse.ArgumentParser(prog=__file__,  conflict_handler='resolve')
+    parser.add_argument('input', nargs='?', help='input folder')
+    parser.add_argument('level', type=int,  help='input folder')
+    
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--index',  '-i', help='get code block by squence number', type=int)
+    group.add_argument('--lineno', '-l', help='get code block by lineno',         type=int)
+    
+    parser.add_argument('--keep-lineno', '-k', action='store_true', help='')
+
+    args = parser.parse_args()
+    body = open(args.input).read() if args.input else sys.stdin.read()
+    subtrees = read_subtrees(body, args.input or '')
+
+    if args.index:
+        subtree = getSubtreeByIndex(subtrees, args.level, args.index)
+    elif args.lineno:
+        subtree = getSubtreeByLineNum(subtrees, args.level, args.lineno)
+    #print('yes', subtree['start_lno'])
+    if args.keep_lineno:
+        #print(f"subtree['start_lno']={subtree['start_lno']}")
+        print('\n'*(subtree['start_lno']-1), end='')
+    #print('===', repr(body[subtree['start']]))
+    print(body[subtree['start']:subtree['end']])
+    
+if __name__ == '__main__':
+    main()

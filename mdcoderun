@@ -1,0 +1,399 @@
+#! /usr/bin/env python
+import sys
+import os
+import re
+import os.path
+import re
+import subprocess
+import bisect
+from collections import defaultdict
+import contextlib
+
+import subprocess
+from subprocess import PIPE
+from threading import Thread
+import time
+import tempfile
+
+def quotedSplit(s, delimiter=','):
+    return [
+        a[0] for a in re.findall(
+            r'''([^"'`]*?((".*?[^\\]".*?)|('.*?[^\\]'.*?)|(`.*?[^\\]`.*?))*[^"'`]*?)'''+delimiter
+            , s+delimiter)]
+    
+def read_codeblocks(body, mdname, logmsgs = () ):
+    
+    FENCED_BLOCK_RE = re.compile(r'''
+    (?P<all>(?P<comment><!--mdcoderun--(?P<attributes>.*?)-->(\s*\n)+)?
+    (?P<indent>^[ \t]*)
+    (?P<codeblock>(?P<fence>(?:~{3,}|`{3,}))[ ]*         # Opening ``` or ~~~
+    (\{?\.?(?P<lang>[\w#.+-]*))?[ ]*        # Optional {, and lang
+    # Optional highlight lines, single- or double-quote-delimited
+    (hl_lines=(?P<quot>"|')(?P<hl_lines>.*?)(?P=quot))?[ ]*
+    (:[ ]*(?P<filename>[^ ]*?))?[ ]*
+    }?[ ]*\n                                # Optional closing }
+    (?P<code>.*?)\n
+    [ \t]*(?P=fence)[ ]*$))
+    |<!--.*?-->''', re.MULTILINE | re.DOTALL | re.VERBOSE)
+
+
+    line_starts = [m.start() for m in re.finditer('^', body, re.MULTILINE)]
+
+    result = []
+    for m in FENCED_BLOCK_RE.finditer(body):
+        if not m.group('code'):
+            continue
+        result += [{
+            'start': m.start('codeblock'),
+            'end'  : m.end('codeblock')+1,
+            
+            'start_lno' : bisect.bisect_left(line_starts, m.start('code')) + 1,
+            'end_lno'   : bisect.bisect_right(line_starts, m.end('code'))  + 1,
+            'code'      : m.group('code'),
+            'lang'      : (m.group('lang')     or '').strip(),
+            'filename'  : (m.group('filename') or '').strip(),
+            'indent'    : m.group('indent')   or '',
+            'seqno'     : len(result) + 1,
+            'mdname'    : mdname,
+            'start_fence_lno' : bisect.bisect_left(line_starts, m.start('code')),
+            'end_fence_lno'   : bisect.bisect_right(line_starts, m.end('code'))  + 2,
+        }]
+    return result
+
+
+class MdCodeRunError(Exception):
+    pass
+
+def env_parse(env, logmsgs = () ):
+
+    result = {}
+    for s in quotedSplit(os.environ.get(env, '')):
+        if not s:
+            continue
+        try:
+            lang,cmd = quotedSplit(s, '=')
+            result[lang.strip()] = cmd.strip()
+        except ValueError:
+            print(f'WARNING env "{env}" is unexpected value.',
+                  os.environ.get(env, ''), file=sys.stderr)
+    return result
+
+        
+def lang2execution(lang, codefilename, logmsgs = () ):
+    l2v =  env_parse('MDCODERUN_LANG2EXEC', logmsgs)
+    #print("{}", l2v)
+    exe = l2v.get(lang)
+    if not exe:
+        return  ''
+
+    exe = re.sub(r'([^{])\{\}([^}])', fr'\1{codefilename}\2', ' ' + exe + ' ').replace('{{}}', '{}')[1:-1]
+    return [e for e in quotedSplit(exe, ' ') if e]
+
+
+def lang2command(lang, codefilename, logmsgs = () ):    
+    l2v =  env_parse('MDCODERUN_LANG2CMD', logmsgs)
+    cmd = l2v.get(lang)
+    if not cmd:
+        return  ''
+
+    return [e for e in quotedSplit(cmd, ' ') if e] + (codefilename and [codefilename])
+
+
+def lang2command(lang, codefilename, logmsgs = () ):    
+    l2v =  env_parse('MDCODERUN_LANG2CMD', logmsgs)
+    cmd = l2v.get(lang)
+    if not cmd:
+        return  ''
+
+    return [e for e in quotedSplit(cmd, ' ') if e] + (codefilename and [codefilename])
+
+
+def lang2ext(lang, logmsgs = () ):    
+    l2v =  env_parse('MDCODERUN_LANG2EXT', logmsgs)
+    return l2v.get(lang, '')
+
+def get_shebang(code, codefilename, logmsgs = () ):
+    if code[:2] != '#!':
+        return []
+    shebang = (code.splitlines() or [''])[0][2:].strip()
+    return [e for e in quotedSplit(shebang, ' ') if e] + (codefilename and [codefilename])
+
+
+def get_run_command(codeblock, codefilename, use_shebang = True, logmsgs = () ):
+    if codeblock['lang'] == '':
+        raise MdCodeRunError(
+            f'The codeblock {codeblock["start_lno"]}-{codeblock["end_lno"]} is not specified languages.')
+    
+    execute = lang2execution(codeblock['lang'], codefilename, logmsgs[:])
+    if execute:
+        return execute
+
+    if use_shebang:
+        shebang = get_shebang(codeblock['code'], codefilename, logmsgs[:])
+        if shebang:
+            return shebang
+
+    cmd = lang2command(codeblock['lang'], codefilename, logmsgs[:])
+    if cmd:
+        return cmd
+
+    return [codeblock['lang'], codefilename]
+
+
+def eval_codeblock_variable(codeblock):
+    code = codeblock['code']
+    line_beginnings = [m.start() for m in re.finditer('^', code, re.MULTILINE)]
+
+    for m in reversed(list(re.finditer(r'\[::(.+?)::\]', code))):
+        var,*args = [e.strip() for e in m.group(1).split(',')]
+        if var.lower() == 'this':
+            code = code[:m.start()] + codeblock['mdname'] + code[m.end():]
+        elif var.lower() == 'lineno':
+            lineno = bisect.bisect_right(line_beginnings, m.start()) - 1 + codeblock['start_lno']
+            code = code[:m.start()] + str(lineno) + code[m.end():]
+        elif var == 'index':
+            idx = codeblock['seqno'] + int(args and args[0] or '0')
+            code = code[:m.start()] + str(idx) + code[m.end():]
+        elif var == 'raw-index':
+            idx = codeblock['raw-index'] + int(args and args[0] or '0')
+            code = code[:m.start()] + str(idx) + code[m.end():]
+        elif var == 'raw-name':
+            idx = codeblock['raw-name'].group(int(args and args[0] or '0'))
+            code = code[:m.start()] + str(idx) + code[m.end():]
+        elif var == 'lang':
+            idx = codeblock['lang']
+            code = code[:m.start()] + str(idx) + code[m.end():]
+        elif var == 'raw-lang':
+            idx = codeblock['raw-lang']
+            code = code[:m.start()] + str(idx) + code[m.end():]
+        elif var == 'raw-file':
+            idx = codeblock['raw-file']
+            code = code[:m.start()] + str(idx) + code[m.end():]
+        elif var == 'raw-lineno':
+            idx = codeblock['raw-lineno']
+            code = code[:m.start()] + str(idx) + code[m.end():]
+
+    if codeblock['indent']:
+        #code = re.sub('^' + codeblock['indent'], '', code, re.MULTILINE)
+        code = '\n'.join([c[len(codeblock['indent']):] for c in code.splitlines()])
+    return code
+
+import contextlib
+
+
+def search_config(filename):
+    dirname = os.path.dirname(os.path.abspath(filename))
+    configname = ''
+    while os.path.dirname(dirname) != dirname:
+        if os.path.exists(os.path.join(dirname, '.mdcoderun.md')):
+            configname = os.path.join(dirname, '.mdcoderun.md')
+            break
+        dirname = os.path.dirname(dirname)
+    else:
+        dirname = os.path.expanduser('~')
+        if os.path.exists(os.path.join(dirname, '.mdcoderun.md')):
+            configname = os.path.join(dirname, '.mdcoderun.md')
+
+    return configname
+
+
+@contextlib.contextmanager
+def tempCodeFile(ext):
+    # tempfile auto delete cannot be used in windows.
+    tmp = tempfile.NamedTemporaryFile('w', suffix=ext, delete=False)
+    yield tmp
+    tmp.close()
+    os.remove(tmp.name)
+
+
+def run(codeblock, argv, logmsgs = () ):
+    ext = lang2ext(codeblock['lang'], logmsgs)
+    
+    code = eval_codeblock_variable(codeblock)
+    with tempCodeFile(ext) as tmp:
+        tmp.write(code)
+        tmp.flush()
+        #tmp.close()
+        cmd = get_run_command(codeblock, tmp.name, logmsgs)
+        print('mdcoderun:', ' '.join(cmd), file=sys.stderr)
+        #p = subprocess.run(cmd)
+
+        stripQuote = lambda s: s if (s[:1]+s[-1:]) not in ("''", '""') else s[1:-1]
+        #print([stripQuote(e) for e in cmd])
+        p = subprocess.run([stripQuote(e) for e in cmd] + argv)
+
+        
+        return p.returncode
+
+
+def match_entrypoint(real_codeblock, entry_codeblock):
+    name,*rest = entry_codeblock['filename'].split(';')
+    name = name.strip()
+    if name != 'mdcoderun-entrypoint' and name != ('mdcoderun-entrypoint' + '-' + real_codeblock['lang']):
+        return False
+
+    #print('rest=',rest)
+    if not rest:
+        return True
+
+    pattern = ';'.join(rest).strip()
+    #print('pattern=',pattern)
+    return re.match(pattern, real_codeblock['filename'])
+    
+
+def match_name(real_codeblock, entry_codeblock):
+    name,*rest = entry_codeblock['filename'].split(';')
+    name = name.strip()
+    if name != 'mdcoderun-entrypoint' and name != ('mdcoderun-entrypoint' + '-' + real_codeblock['lang']):
+        raise
+
+    #print('rest=',rest)
+    if not rest:
+        pattern = '.*'
+    else:
+        pattern = ';'.join(rest).strip()
+    #print('pattern=',pattern)
+    return re.match(pattern, real_codeblock['filename'].strip()) or \
+        re.match('.*', real_codeblock['filename'].strip())
+
+
+def main(sysargv):
+    import argparse
+    import tempfile
+
+    # resolve:-h オプションを上書き可能にする
+    parser = argparse.ArgumentParser(prog=__file__,  conflict_handler='resolve')
+    parser.add_argument('input', nargs='?', help='input folder')
+    parser.add_argument('argv', nargs='*', help='input folder')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--name',   '-n', help='get code block by name')
+    group.add_argument('--index',  '-i', help='get code block by squence number', type=int)
+    group.add_argument('--lineno', '-l', help='get code block by lineno',         type=int)
+    
+    parser.add_argument('--exec',                         help="replase '{}' ...")
+    parser.add_argument('--show',    action='store_true', help="replase '{}' ...")
+    parser.add_argument('--run',     action='store_true', help="replase '{}' ...", default=True)
+    parser.add_argument('--info',    action='store_true', help="replase '{}' ...")
+    #parser.add_argument('--runall',  action='store_true', help="replase '{}' ...")
+    
+    parser.add_argument('--keep-indent', '-d', action='store_true', help='')    
+    parser.add_argument('--keep-lineno', '-k', action='store_true', help='')    
+    parser.add_argument('--no-entry', action='store_true', help='')
+
+    #parser.add_argument('--lang2cmd', help='', default=os.environ.get('MDCODERUN_LANG2CMD', ''))
+    #parser.add_argument('--lang2cmd', help='', default='')
+    parser.add_argument('--use-shebang', action='store_true', help='')
+
+    if hasattr(parser, 'parse_intermixed_args'):
+        args = parser.parse_intermixed_args(sysargv[1:])
+    else:
+        argv,rest = sysargv, []
+        if '--' in sysargv:
+            argv,rest = argv[:argv.index('--')], argv[argv.index('--')+1:]
+        args = parser.parse_args(argv[1:])
+        args.argv = rest
+
+
+    body = open(args.input).read() if args.input else sys.stdin.read()
+    
+    #import pdb;pdb.set_trace()
+    # 2020/02/12 緊急避難
+    if 0:
+        inputname = args.input or '<stdin>'
+    elif not args.input:
+        tmp = tempfile.NamedTemporaryFile('w', delete=False)
+        tmp.write(body)
+        tmp.close()
+        inputname = tmp.name
+    else:
+        inputname = args.input
+    
+    codeblocks = read_codeblocks(body, inputname)
+    config = search_config(inputname)
+    if config:
+        config_codeblocks = read_codeblocks(open(config).read(), config)
+    else:
+        config_codeblocks = []
+    #print(list(codeblocks))
+
+    #if 1:
+    #    for codeblock in codeblocks:
+    #        os.environ[f"MDCODERUN_CODE__{codeblock['seqno']}"] = eval_codeblock_variable(codeblock)
+    
+
+    if args.index:
+        #codeblocks = [codeblocks[args.index-1]]
+        idxes = [args.index-1]
+    elif args.lineno:
+        idx = bisect.bisect_left([c['end_fence_lno'] for c in codeblocks], args.lineno)
+        if codeblocks[idx]['start_fence_lno'] > args.lineno:
+            raise MdCodeRunError()
+        #codeblocks        = [codeblocks[idx]]
+        idxes        = [idx]
+    elif args.name:
+        #codeblocks = [m for m in codeblocks if re.match(args.name+'$', m['filename'])]
+        idxes = [idx for idx,m in enumerate(codeblocks) if re.match(args.name+'$', m['filename'])]
+    else:
+        #codeblocks = [m for m in codeblocks if m['filename']=='main']
+        idxes = [len(codeblocks)-1]
+
+
+    if args.show:
+        #for codeblock in codeblocks:
+        for idx, codeblock in ((idx,codeblocks[idx]) for idx in idxes ):
+            codeblock['raw-index'] = idx
+            codeblock['raw-name']  = re.match(codeblock['filename'], codeblock['filename'])
+            codeblock['raw-lineno']= codeblock['start_lno']
+            codeblock['raw-file']  = codeblock['mdname']
+            print(codeblock['start_lno'], codeblock['end_lno'], codeblock['lang'], codeblock['filename']
+                  , sep='\t', file=sys.stderr)
+            code = eval_codeblock_variable(codeblock)
+            print(code, end='')
+    elif args.info:
+        for idx, codeblock in enumerate(codeblocks):
+            print(codeblock['start_lno'], codeblock['end_lno'], codeblock['lang'], codeblock['filename']
+                  , sep='\t')
+    elif args.run:
+        #if len(codeblocks) != 1:
+        if len(idxes) != 1:
+            raise MdCodeRunError(f'コードブロックが指定されない、または2つ以上指定された')
+        if not codeblocks[idxes[0]]['filename'].startswith('mdcoderun-entrypoint') and not args.no_entry:
+            for i in range(idxes[0]-1, -1, -1):
+                #if codeblocks[i]['filename'] == 'mdcoderun-entry':
+                if match_entrypoint(codeblocks[idxes[0]], codeblocks[i]):
+                    codeblocks[i]['raw-index'] = idxes[0] + 1
+                    codeblocks[i]['raw-name']  = match_name(codeblocks[idxes[0]], codeblocks[i])
+                    codeblocks[i]['raw-lang']  = codeblocks[idxes[0]]['lang']
+                    codeblocks[i]['raw-file']  = codeblocks[idxes[0]]['mdname']
+                    codeblocks[i]['raw-lineno']= codeblocks[idxes[0]]['start_lno']
+                    return run(codeblocks[i], args.argv)
+            for codeblock in config_codeblocks[::-1]:
+                #if codeblock['filename'] == 'mdcoderun-entry':
+                if match_entrypoint(codeblocks[idxes[0]], codeblock):
+                    codeblock['raw-index'] = idxes[0] + 1
+                    codeblock['raw-name']  = match_name(codeblocks[idxes[0]], codeblock)
+                    codeblock['raw-lang']  = codeblocks[idxes[0]]['lang']
+                    codeblock['raw-file']  = codeblocks[idxes[0]]['mdname']
+                    codeblock['raw-lineno']= codeblocks[idxes[0]]['start_lno']
+                    return run(codeblock, args.argv)
+    
+        
+        return run(codeblocks[idxes[0]], args.argv)
+        #return run(codeblocks[0], args.argv)
+            
+                            
+    elif args.exec:
+        raise Exception()
+    # elif args.runall:
+        # with contextlib.nested(
+        #             [tempfile.NamedTemporaryFile('w') for i in matches]) as tmps:
+    # elif args.exec:
+    # elif args.save_as_fencedname:
+#import pdb;pdb.set_trace()
+# main(['', 'test3.md', '-i', '881', '--show'])
+# main(['', 'test3.md', '-i', '881', '--show'])
+# raise
+if __name__ == '__main__':
+    import sys
+    returncode = main(sys.argv)
+    exit(returncode)
