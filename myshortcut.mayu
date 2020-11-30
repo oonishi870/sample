@@ -1,0 +1,246 @@
+# ショートカットキー
+# DvorakJでの設定を再現
+
+#key W-Space                             = 半角/全角
+
+# 前候補/変換(DvorakJの親指シフトを再現)
+mod mod0 += !Convert
+
+# 再変換機能の便利さに気づいた。(GoogleIMEの計算機能) 2014/03/26
+#key *Hiragana = *Convert
+
+# GhostBoard用(ペーストのあとクリップボードのリストを進める)
+mod mod1 += !NonConvert
+key M1-*V                       = C-*V &Wait(100) C-Up
+key M1-*B                       = C-*V &Wait(100) C-Down
+
+# 以下はマウスポインタが動かせないのであんまり意味がなかった
+## V を左ボタンのダブルクリックに割り当てる。
+#key D-M0-*H = &VK(LButton) &Wait(10) &VK(LButton)
+## クリックがリピートされるのを防ぎ、キー離したときは無視する。
+#key D-R-M0-*H U-M0-*H = &Ignore
+
+#key D-M0-*H = C-Left &Wait(10) S-C-Right &Wait(10) C-C &Wait(10) Right
+#key D-R-M0-*H U-M0-*H = &Ignore
+
+#key D-M0-*M = C-Left &Wait(10) S-C-Right
+#key D-R-M0-*M U-M0-*H = &Ignore
+
+key D-M0-*H = C-Left &Wait(10) S-C-Right
+key D-R-M0-*H U-M0-*H = &Ignore
+
+mod Alt += !Eisuu
+key M0-*I                       = *Up
+key M0-*K                       = *Down
+key M0-*O                       = *Return
+key M0-*Semicolon       = *End
+key M0-*N                       = *Home
+key M0-*U                       = *Backspace
+
+key M0-*L                       = *Right
+key M0-*J                       = *Left
+
+# 9,0はそれぞれ()[]にした。
+## 2013-03-13 追加
+#key M0-*_9             = *PageUp
+#key M0-*_0             = *PageDown
+
+
+
+#key M0-*Z       = *_9
+#key M0-*X       = *_8
+#key M0-*C       = *_7
+#key M0-*V       = *_6
+#key M0-*B       = *_5
+#key M0-*A       = *_4
+#key M0-*S       = *_3
+#key M0-*D       = *_2
+#key M0-*F       = *_1
+#key M0-*G       = *_0
+#key M0-*Q       = *F6
+key M0-*W        = *F8
+key M0-*E        = *F10
+key M0-*R        = *F7
+key M0-*T        = *F9
+
+#key M0-A-*X     = *F1
+#key M0-A-*C     = *F2
+#key M0-A-*V     = *F3
+#key M0-A-*A     = *F4
+#key M0-A-*S     = *F5
+#key M0-A-*D     = *F6
+#key M0-A-*F     = *F7
+#key M0-A-*Q     = *F8
+#key M0-A-*W     = *F9
+#key M0-A-*E     = *F10
+#key M0-A-*R     = *F11
+#key M0-A-*T     = *F12
+#
+#key M0-*X       = *F1
+#key M0-*C       = *F2
+#key M0-*V       = *F3
+#key M0-*A       = *F4
+#key M0-*S       = *F5
+#key M0-*D       = *F6
+#key M0-*F       = *F7
+#key M0-*Q       = *F8
+#key M0-*W       = *F9
+#key M0-*E       = *F10
+#key M0-*R       = *F11
+#key M0-*T       = *F12
+
+# カッコ作成
+#key M0-*_9      =  $LEFT_PARENTHESIS  &Wait(10)  $RIGHT_PARENTHESIS  Left
+key M0-*I-*_0       =  *LeftSquareBracket &Wait(10)  *RightSquareBracket Left
+key M0-*I-C-*_0       =  C-X  &Wait(10) LeftSquareBracket &Wait(10) C-V &Wait(10) RightSquareBracket Left
+key M0-*I-C-S-*_0       =  C-X  &Wait(10) S-LeftSquareBracket &Wait(10) C-V &Wait(10) S-RightSquareBracket Left
+
+key M0-*I-_9     =  $LEFT_PARENTHESIS  &Wait(10)  $RIGHT_PARENTHESIS  Left
+key M0-*I-S-_9   =  $LESS-THAN_SIGN    &Wait(10)  $GREATER-THAN_SIGN  Left
+
+key M0-*I-C-*_9    =  C-X  &Wait(10) S-_8    &Wait(10) C-V &Wait(10)  S-_9 Left
+key M0-*I-C-S-_9   =  C-X  &Wait(10) S-Comma &Wait(10) C-V &Wait(10)  S-FullStop  Left
+
+
+key M0-*I-Q             = *$APOSTROPHE     &Wait(10) *$APOSTROPHE Left
+key M0-*I-S-Q           = *$QUOTATION_MARK &Wait(10) *$QUOTATION_MARK Left
+
+key M0-C-Q             = C-X &Wait(10) S-_7 &Wait(10) C-V &Wait(10) S-_7 Left
+key M0-C-S-Q           = C-X &Wait(10) S-_2 &Wait(10) C-V &Wait(10) S-_2 Left
+
+
+key M0-*P             = *TAB
+#key M0-*M             = *半角/全角
+
+# CapsLockを復帰させてGoogleIMEの単語登録にした(2015/12/01)
+##mod mod2 += !!Eisuu
+#mod mod2 += !Eisuu
+###key Eisuu =!~
+###key *I-*Eisuu         = 半角/全角
+#
+#key M2-*J        = *_1
+#key M2-*K        = *_2
+#key M2-*L        = *_3
+#key M2-*U        = *_4
+#key M2-*I        = *_5
+#key M2-*O        = *_6
+#
+#key M2-M0-*J     = S-*_1
+#key M2-M0-*K     = S-*_2
+#key M2-M0-*L     = S-*_3
+#key M2-M0-*U     = S-*_4
+#key M2-M0-*I     = S-*_5
+#key M2-M0-*O     = S-*_6
+
+key M0-*G        = *_0
+key M0-*F        = *_1
+key M0-*D        = *_2
+key M0-*S        = *_3
+key M0-*A        = *_4
+key M0-*B        = *_5
+key M0-*V        = *_6
+key M0-*C        = *_7
+key M0-*X        = *_8
+key M0-*Z        = *_9
+
+key M0-S-*G      = *_0
+key M0-S-*F      = *$EXCLAMATION_MARK  #*_1
+key M0-S-*D      = *$COMMERCIAL_AT     #*_2
+key M0-S-*S      = *$NUMBER_SIGN       #*_3
+key M0-S-*A      = *$DOLLAR_SIGN       #*_4
+key M0-S-*B      = *$PERCENT_SIGN      #*_5
+key M0-S-*V      = *$CIRCUMFLEX_ACCENT #*_6
+key M0-S-*C      = *$AMPERSAND         #*_7
+#key M0-S-*X     = *$EQUALS_SIGN       #*_8
+#key M0-S-*Z     = *$PLUS_SIGN         #*_9
+
+
+key M0-  *LeftSquareBracket              = *$EXCLAMATION_MARK &Wait(10) *$EQUALS_SIGN
+key M0-S-*LeftSquareBracket              = *$PLUS_SIGN        &Wait(10) *$EQUALS_SIGN
+
+
+## スペースをモディファイヤーにして、
+## スペースは別途ショートカットを用意する
+#mod shift += !!!Space
+#key R-*Space = &Ignore
+
+
+#key M0-CloseBracket2 = A-F4
+key M0-CloseBracket2 = ESC
+
+#key M0-A-U = A-R
+#key M0-A-I = PageUp
+#key M0-A-K = PageDown
+
+#key M0-A-U = A-R
+#key M0-A-I = Up   &Wait(1) Up   &Wait(1) Up   &Wait(1) Up   &Wait(1) Up   &Wait(1)
+#key M0-A-K = Down &Wait(1) Down &Wait(1) Down &Wait(1) Down &Wait(1) Down &Wait(1)
+key M0-Period = PageDown
+key M0-Comma  = PageUp
+
+## 一時的な定義
+#key Num0 = A-Tab &Wait(100) A-Tab
+#key Num1 = C-C &Wait(100) A-Tab &Wait(100) A-Tab
+#key Num2 = A-Q &Wait(100) A-Q
+#key Num3 = Tab &Wait(100) Down &Wait(100) End &Wait(100) S-Home &Wait(100) C-V
+#key Num4 = A-H &Wait(100) Enter
+#key Num5 = A-PrintScreen &Wait(100) A-Tab &Wait(100) A-Tab
+#key Num6 = C-V
+#key Num7 = A-F &Wait(100) A
+#key Num8 = C-Up &Wait(100) C-V &Wait(100) Enter
+#key Num9 = C-S
+#key NumLock = Tab &Wait(100) Down &Wait(100) End &Wait(100) S-Home
+##key Num0 = A-Tab &Wait(100) A-Tab
+
+## 一時的な定義
+#key Num0 = A-Tab &Wait(100) A-Tab
+#key Num1 = A-Q &Wait(100) A-Q
+#key Num2 = S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab
+#key Num3 = Down &Wait(100) Right &Wait(100) Down &Wait(100) Right &Wait(100) Down &Wait(100) Down &Wait(100) Down &Wait(100) Down &Wait(100) Down &Wait(100) Down &Wait(100) Down
+#key Num4 = S-Tab &Wait(100) S-Tab &Wait(100) Enter
+#key Num5 = C-V &Wait(100) Enter
+#key Num6 = S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) Enter
+#key Num7 = A-F &Wait(100) A
+#key Num8 = C-Up &Wait(100) C-V &Wait(100) Enter
+#key Num9 = C-S
+#key NumLock = Tab &Wait(100) Down &Wait(100) End &Wait(100) S-Home
+#key Num0 = A-Tab &Wait(100) A-Tab
+
+
+## 一時的な定義
+#key Num1 = Down &Wait(100) Home &Wait(100) S-End &Wait(100) C-C &Wait(100) Down &Wait(100) Home &Wait(100) S-End &Wait(100) C-C &Wait(100) Home &Wait(100) A-Tab &Wait(100) A-Tab
+#key Num2 = A-Q &Wait(100) A-Q
+#key Num3 = S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) Home &Wait(100) Right &Wait(100) Right &Wait(100) Right &Wait(100) Right &Wait(100) Right &Wait(100) Right &Wait(100) P &Wait(100) P &Wait(100) P &Wait(100) P
+#key Num4 = S-Tab &Wait(100) S-Tab &Wait(100) Enter
+#key Num5 = C-Up &Wait(100) C-V &Wait(100) Enter
+#key Num6 = S-Tab &Wait(100) S-Tab &Wait(100) S-Tab &Wait(100) Enter
+#key Num7 = A-PrintScreen &Wait(500) A-Tab &Wait(100) A-Tab
+#key Num8 = C-V &Wait(500) A-F &Wait(100) A
+#key Num9 = C-Up &Wait(100) C-Down &Wait(100) C-V &Wait(100) Enter
+#key Num0 = A-Tab &Wait(100) A-Tab
+#
+##key NumLock = Tab &Wait(100) Down &Wait(100) End &Wait(100) S-Home
+
+#key Num1 = Down &Wait(100) Home &Wait(100) S-End &Wait(100) C-C &Wait(100) Left &Wait(100) Down &Wait(100) Home &Wait(100) S-End &Wait(100) C-C &Wait(100) Left &Wait(100) Down &Wait(100) Home &Wait(100) S-End &Wait(100) C-C &Wait(100) Left &Wait(100) Down
+##key Num2 = &Wait(100) Home &Wait(100) S-End &Wait(100) C-C &Wait(100) Left &Wait(100) Down
+##key Num3 = &Wait(100) Home &Wait(100) S-End &Wait(100) C-C &Wait(100) Left &Wait(100) Down
+#key Num2 = A-Tab &Wait(100) A-Tab
+#key Num3 = LButton &Wait(100) LButton
+#key Num4 = C-Up &Wait(100) C-Up &Wait(100) C-V &Wait(100) Tab &Wait(100) C-Down &Wait(100) C-V &Wait(100) Enter
+#key Num5 = PrintScreen &Wait(500) A-Tab &Wait(100) A-Tab
+#key Num6 = C-V &Wait(500) A-F &Wait(100) A
+#key Num7 = C-Up &Wait(100) C-Down &Wait(100) C-V &Wait(100) Enter
+#key Num8 = A-Tab &Wait(100) A-Tab
+
+#key Num1 = Down &Wait(100) Home &Wait(100) S-End &Wait(100) C-C &Wait(100) Left &Wait(100) Down &Wait(100) Home &Wait(100) S-End &Wait(100) C-C &Wait(100) Left &Wait(100) Down &Wait(100) Home &Wait(100) S-End &Wait(100) C-C &Wait(100) Left &Wait(100) Down &Wait(100) A-Tab &Wait(100) A-Tab
+#key Num2 = LButton &Wait(100) LButton &Wait(100) C-Up &Wait(100) C-Up &Wait(100) C-V &Wait(100) Tab &Wait(100) C-Down &Wait(100) C-V &Wait(100) Enter
+#key Num3 = PrintScreen &Wait(500) A-Tab &Wait(100) A-Tab
+#key Num4 = C-V &Wait(500) A-F &Wait(100) A
+#key Num5 = C-Up &Wait(100) C-Down &Wait(100) C-V &Wait(100) Enter
+#key Num6 = A-Tab &Wait(100) A-Tab
+
+
+
+#key Num2 = LButton &Wait(10) LButton &Wait(10) LButton &Wait(10) LButton &Wait(10) LButton
+
+key M0-_8 = A-Tab

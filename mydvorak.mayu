@@ -1,0 +1,135 @@
+# Dvorak用設定ファイル
+# DvorakJのDvorak(blechmusik)に合わせた
+# @date 2010.4.18
+# @author oonishi@e-jdy.jp
+
+# @date 2015/12/02
+# ファイルの末尾にある以下の不明な箇所をコメントアウトした。
+# これのせいで右下\が使えなかった。
+# mod control += RightSquareBracket
+# key ~S-*ReverseSolidus			= *RControl
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Nodoka - dotjp.nodoka
+# Copyright (C) 1999-2005, TAGA Nayuta <nayuta@users.sourceforge.net>
+#
+# Modify by applet on 2010-03-29
+
+# まずキーボード定義を読み込む。
+if ( USE104 )
+  include "104.mayu"			# 104 キーボード設定
+  if ( USE109on104 )
+    include "109on104.mayu"		# 104 キーボードを 109 キーボード風に
+  endif
+else
+  include "109.mayu"			# 109 キーボード設定
+  if ( USE104on109 )
+    include "104on109.mayu"		# 109 キーボードを 104 キーボード風に
+  endif
+endif
+
+#if ( USEdefault )
+#  include	"default2.mayu"	# Emacs ライクなさまざまな設定
+#endif
+
+
+# Global keymap 設定
+keymap Global
+
+
+# 以下は、便宜上、設定するもの
+#key C-A-D = &DescribeBindings 		# 現在のキーマップのログ出力
+
+# シフト+F2: 日本語キーボード、英語キーボード 切り替えトグル
+#if ( USE109 )
+#  if ( USE104on109 )
+#    key S-F2 => &IconColor(0) &HelpMessage("Reloaded", "日本語 109 キーボード") &LoadSetting("日本語 109 キーボード")
+#  else
+#    key S-F2 => &IconColor(2) &HelpMessage("Reloaded", "日本語 109 キーボード (104 風)") &LoadSetting("日本語 109 キーボード (104 風)")
+#  endif
+#endif
+#if ( USE104 )
+#  if ( USE109on104 )
+#    key S-F2 => &IconColor(0) &HelpMessage("Reloaded", "英語 104 キーボード") &LoadSetting("英語 104 キーボード")
+#  else
+#    key S-F2 => &IconColor(2) &HelpMessage("Reloaded", "英語 104 キーボード (109 風)") &LoadSetting("英語 104 キーボード (109 風)")
+#  endif
+#endif
+# 以下に、ご自身の設定を御書き下さい。
+
+define KBDDVORAKon109
+
+# 一段目
+key *I- S-_2            = *$COMMERCIAL_AT
+key *I- S-_6            = *$CIRCUMFLEX_ACCENT
+key *I- S-_7            = *$AMPERSAND
+key *I- S-_8            = *$ASTERISK
+key *I- S-_9            = *$LEFT_PARENTHESIS
+key *I- S-_0            = *$RIGHT_PARENTHESIS
+key *I-*S-Minus            = *LeftSquareBracket
+key *I-*S-Caret            = *RightSquareBracket
+
+# 二段目
+key *I-Q				= *$APOSTROPHE
+key *I-S-Q              = *$QUOTATION_MARK
+key *I-*S-W				= *Comma
+key *I-*S-E				= *Period
+key *I-*S-R				= *P
+key *I-*S-T				= *Y
+key *I-*S-Y				= *F
+key *I-*S-U				= *G
+key *I-*S-I				= *C
+key *I-*S-O				= *R
+key *I-*S-P				= *L
+key *I-*S-Atmark		= *Slash
+key *I-  LeftSquareBracket	= *$EQUALS_SIGN
+key *I-S-LeftSquareBracket	= *$PLUS_SIGN
+
+# 三段目
+key *I-*S-A				= *A
+key *I-*S-S				= *O
+key *I-*S-D				= *E
+key *I-*S-F				= *U
+key *I-*S-G				= *I
+key *I-*S-H				= *D
+key *I-*S-J				= *H
+key *I-*S-K				= *T
+key *I-*S-L				= *N
+key *I-*S-Semicolon		= *S
+key *I-  Colon			= *$HYPHEN-MINUS
+key *I-S-Colon			= *$LOW_LINE
+
+# 2013/08/06修正 なぜかRightSquareBracketでは変更されず。
+# OSとの相性の問題？のどかのバージョンの問題？
+# 前の会社では大丈夫だったのに...
+def key CloseBracket2 = 0x2b
+key *I-   CloseBracket2			= $GRAVE_ACCENT
+key *I- S-CloseBracket2			= $TILDE
+#key *I-   RightSquareBracket			= $GRAVE_ACCENT
+#key *I- S-RightSquareBracket			= $TILDE
+
+# 四段目
+key *I-   Z				= *$SEMICOLON
+key *I- S-Z				= *$COLON
+key *I-*S-X				= *Q
+key *I-*S-C				= *J
+key *I-*S-V				= *K
+key *I-*S-B				= *X
+key *I-*S-N				= *B
+key *I-*S-M				= *M
+key *I-*S-Comma			= *W
+key *I-*S-Period			= *V
+key *I-*S-Slash			= *Z
+key *I-*S-BackSlash			= *YenSign
+
+
+# ショートカット
+include "myshortcut.mayu"
+
+keymap Global
+ # なにを意味するのか不明。コメントアウト(2015/12/02)
+ #mod control += RightSquareBracket
+ #key ~S-*ReverseSolidus			= *RControl
+
