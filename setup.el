@@ -1,0 +1,37 @@
+
+
+
+(require 'package)
+(setq package-archives
+      '(("gnu" . "http://elpa.gnu.org/packages/")
+        ("melpa" . "http://melpa.org/packages/")
+        ("org" . "http://orgmode.org/elpa/")))
+
+(package-initialize)
+(package-refresh-contents)
+(package-install 'dash)
+(package-install 'bind-key)
+(package-install 'expand-region)
+(package-install 'helm)
+(package-install 'markdown-mode)
+(package-install 'markdown-mode+)
+(package-install 'recentf-ext)
+(package-install 'volatile-highlights)
+(package-install 'yasnippet)
+(package-install 'helm-swoop)
+;;(package-install 'mmm-mode)
+;;(package-install 'w3m)
+;;(package-install 'nlinum)
+;;(package-install 'htmlize)
+(package-install 'smooth-scroll)
+(package-install 'mozc)
+(package-install 'mozc-im)
+(package-install 'mozc-popup)
+;;(package-install 'ein)
+(package-install 'polymode)
+(package-install 'poly-markdown)
+(package-install 'undo-tree)
+(package-install 'w3m)
+(package-install 'hiwin)
+(package-install 'company)
+
