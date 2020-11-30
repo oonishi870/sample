@@ -1,4 +1,20 @@
-test
+# test
+- nodoka
+- clibor
+- BandiCam or IPMsg
+- notepad++ 32bit
+- sakura
+- vscode
+- wsl
+- python
+- As/r or Tablacus
+- QGIS
+- SuperMap
+
+
+
+# test
+
 ```elisp
 (defun my/mdcoderun()
   (interactive)
