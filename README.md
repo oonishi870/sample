@@ -107,3 +107,73 @@ http://www.eco-lead.jp/hitozukuri_seminar_2020/
   )
 	
 ```
+
+
+# markdownのhtmlメール化
+
+2021/01/26
+
+検討中
+----
+
+~~~md
+
+# test
+
+```python
+import test
+print('yes')
+```
+
+- test
+    ```bash : name
+    export TEST
+	echo $TEST
+    ```
+- test2
+~~~
+
+```js
+const program = require("commander");
+const fs = require("fs");
+// markedモジュールをmarkedオブジェクトとしてインポートする
+const marked = require("marked");
+
+program.parse(process.argv);
+const filePath = program.args[0];
+
+fs.readFile(filePath, { encoding: "utf8" }, (err, file) => {
+    if (err) {
+        console.error(err.message);
+        process.exit(1);
+        return;
+    }
+    // MarkdownファイルをHTML文字列に変換する
+    const html = marked(file, {gfm:true});
+    console.log(html);
+});
+```
+
+```bash
+cd /tmp/test
+mdcoderun [::this::] -i [::index,-2::] --show > test.md
+mdcoderun [::this::] -i [::index,-1::] --show > test.js
+cat <<EOF
+<html>
+<header>
+<link rel="stylesheet" 
+href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</header>
+<body>
+EOF
+
+node test.js test.md
+
+cat <<EOF
+</body>
+</html>
+EOF
+
+```
