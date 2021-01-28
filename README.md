@@ -177,3 +177,127 @@ cat <<EOF
 EOF
 
 ```
+
+# latex環境のセットアップ中
+
+2021/01/28
+
+-----
+
+
+```Dockerfile
+FROM ubuntu:latest
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update -y
+
+RUN apt install dvipng  -y
+RUN apt install latexmk -y
+RUN apt install mathtex -y
+RUN apt install texlive-full -y
+```
+
+```bash
+rm -r /tmp/test.d
+mkdir /tmp/test.d
+cd    /tmp/test.d
+mdcoderun [::this::] -i [::index,-1::] --show > Dockerfile
+docker build \
+       --build-arg HTTPS_PROXY=$HTTPS_PROXY \
+       --build-arg HTTP_PROXY=$HTTP_PROXY   \
+       . -t test-image
+```
+
+```
+asymptote
+biber
+chktex
+cm-super (>= 0.3.3-3)
+context
+dvidvi
+dvipng
+feynmf
+fragmaster
+info (>= 4.8)
+lacheck
+latex-cjk-all (>= 4.6.0+cvs20060714-2)
+latexdiff
+latexmk
+lcdf-typetools
+lmodern (>= 0.93.3)
+prerex (>> 6.5.3-1)
+psutils
+purifyeps
+t1utils
+tex-gyre
+texinfo (>= 4.8)
+texlive-base (>= 2017.20170628)
+texlive-bibtex-extra (>= 2017.20170628)
+texlive-binaries (>= 2017.20170524.44437)
+texlive-extra-utils (>= 2017.20170628)
+texlive-font-utils (>= 2017.20170628)
+texlive-fonts-extra (>= 2017.20170628)
+texlive-fonts-extra-links (>= 2017.20170628)
+texlive-fonts-recommended (>= 2017.20170628)
+texlive-formats-extra (>= 2017.20170628)
+texlive-games (>= 2017.20170628)
+texlive-humanities (>= 2017.20170628)
+texlive-lang-arabic (>= 2017.20170628)
+texlive-lang-chinese (>= 2017.20170628)
+texlive-lang-cjk (>= 2017.20170628)
+texlive-lang-cyrillic (>= 2017.20170628)
+texlive-lang-czechslovak (>= 2017.20170628)
+texlive-lang-english (>= 2017.20170628)
+texlive-lang-european (>= 2017.20170628)
+texlive-lang-french (>= 2017.20170628)
+texlive-lang-german (>= 2017.20170628)
+texlive-lang-greek (>= 2017.20170628)
+texlive-lang-italian (>= 2017.20170628)
+texlive-lang-japanese (>= 2017.20170628)
+texlive-lang-korean (>= 2017.20170628)
+texlive-lang-other (>= 2017.20170628)
+texlive-lang-polish (>= 2017.20170628)
+texlive-lang-portuguese (>= 2017.20170628)
+texlive-lang-spanish (>= 2017.20170628)
+texlive-latex-base (>= 2017.20170628)
+texlive-latex-extra (>= 2017.20170628)
+texlive-latex-recommended (>= 2017.20170628)
+texlive-luatex (>= 2017.20170628)
+texlive-metapost (>= 2017.20170628)
+texlive-music (>= 2017.20170628)
+texlive-pictures (>= 2017.20170628)
+texlive-plain-generic (>= 2017.20170628)
+texlive-pstricks (>= 2017.20170628)
+texlive-publishers (>= 2017.20170628)
+texlive-science (>= 2017.20170628)
+texlive-xetex (>= 2017.20170628)
+tipa (>= 2:1.2-2.1)
+vprerex (>> 6.5.3-1)
+xindy
+
+
+```bash
+mdcoderun [::this::] -i [::index,-1::] --show \
+  | awk '(a++%2){print $0}'
+```
+
+
+```
+\documentclass{jsarticle}
+\usepackage{bigints}
+\usepackage{amsmath}
+\begin{document}
+\pagestyle{empty}
+\[
+ \bigint \cfrac{1}{\sqrt{2\pi \sigma^2}}
+ \exp\left(-\cfrac{\left(x-\mu \right)^2}{2\sigma^2} \right)  \, \mathrm{d}x
+\]
+\end{document}
+
+```
+
+platex dvipng の順に実行
+
+
+
